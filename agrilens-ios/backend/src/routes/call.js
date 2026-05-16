@@ -13,10 +13,41 @@
 
 'use strict';
 
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const twilioService = require('../services/twilio');
 const geminiService = require('../services/gemini');
+const elevenlabs = require('../services/elevenlabs');
+const groqService = require('../services/groq');
 const { runDemoSimulation } = require('../simulation');
+
+const uploadsDir = path.join(__dirname, '../../uploads');
+
+// Generate ElevenLabs audio, save to uploads/, return public URL or null
+async function ttsToUrl(text) {
+  try {
+    const voiceId = process.env.ELEVENLABS_VOICE_ID;
+    const buffer = await elevenlabs.textToSpeechBuffer(text, voiceId);
+    if (!buffer) return null;
+    const filename = `tts-${uuidv4()}.mp3`;
+    fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+    return `${process.env.PUBLIC_URL}/uploads/${filename}`;
+  } catch (err) {
+    console.error('[TTS] Failed to generate audio:', err.message);
+    return null;
+  }
+}
+
+// Store a transcript entry and emit via Socket.io
+function emitTranscript(speaker, text, lang, translation) {
+  const entry = { id: uuidv4(), speaker, text, lang, translation, timestamp: Date.now() };
+  if (!global.transcripts) global.transcripts = [];
+  global.transcripts.push(entry);
+  if (global.io) global.io.emit('transcript', entry);
+  return entry;
+}
 
 const router = express.Router();
 
@@ -107,22 +138,33 @@ router.post('/call-bob', async (req, res) => {
 // GET /api/twiml/greeting
 // ---------------------------------------------------------------------------
 
-/**
- * Initial TwiML greeting when Bob picks up.
- * Asks for language preference.
- */
-router.get('/twiml/greeting', (req, res) => {
-  console.log('[Call] GET /api/twiml/greeting');
+async function handleGreeting(req, res) {
+  console.log('[Call] twiml/greeting');
+  const greetingText = 'Hello Bob. This is AgriLens AI calling about your produce shipment. What is your preferred language? Please say English or Spanish.';
+  emitTranscript('AI', greetingText, 'en', null);
   res.set('Content-Type', 'text/xml');
-  res.send(twilioService.buildGreetingTwiml());
-});
+  const greetingAudio = await ttsToUrl(greetingText);
+  if (greetingAudio) {
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/language" method="POST" speechTimeout="6" language="en-US">
+    <Play>${greetingAudio}</Play>
+  </Gather>
+  <Redirect>/api/twiml/greeting</Redirect>
+</Response>`);
+  } else {
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/language" method="POST" speechTimeout="6" language="en-US">
+    <Say voice="Polly.Joanna-Neural">${greetingText}</Say>
+  </Gather>
+  <Redirect>/api/twiml/greeting</Redirect>
+</Response>`);
+  }
+}
 
-// Also handle POST for flexibility (Twilio can use either)
-router.post('/twiml/greeting', (req, res) => {
-  console.log('[Call] POST /api/twiml/greeting');
-  res.set('Content-Type', 'text/xml');
-  res.send(twilioService.buildGreetingTwiml());
-});
+router.get('/twiml/greeting', handleGreeting);
+router.post('/twiml/greeting', handleGreeting);
 
 // ---------------------------------------------------------------------------
 // POST /api/twiml/language
@@ -134,66 +176,86 @@ router.post('/twiml/greeting', (req, res) => {
  */
 router.post('/twiml/language', async (req, res) => {
   console.log('[Call] POST /api/twiml/language');
-
   const speechResult = (req.body.SpeechResult || '').toLowerCase().trim();
   console.log('[Call] SpeechResult from Bob:', speechResult);
-
   const io = req.app.get('io');
 
-  // Detect Spanish from the speech result
   const isSpanish =
     speechResult.includes('español') ||
     speechResult.includes('spanish') ||
     speechResult.includes('espanol') ||
     speechResult.includes('es');
 
+  // Store Bob's language choice as transcript
+  if (speechResult) {
+    emitTranscript('Bob', speechResult, isSpanish ? 'es' : 'en', isSpanish ? 'Spanish, please.' : null);
+  }
+
   res.set('Content-Type', 'text/xml');
 
   if (isSpanish) {
-    console.log('[Call] Language detected: Spanish');
+    if (!global.callLanguage) global.callLanguage = {};
+    global.callLanguage[req.body.CallSid] = 'es';
+    if (io) io.emit('call:language', { language: 'es' });
 
-    // Notify frontend/app
-    if (io) {
-      io.emit('call:language', { language: 'es' });
-    }
-
-    // Generate contextual Spanish explanation using Gemini
     const produceInfo = global.currentProduceInfo;
     let spanishExplanation;
-
     try {
       spanishExplanation = await geminiService.generateSpanishResponse(
-        'Bob selected Spanish as preferred language. Deliver the quality inspection report.',
+        'Bob selected Spanish. Deliver the produce quality inspection report.',
         produceInfo
       );
     } catch (err) {
-      console.error('[Call] Failed to generate Spanish response:', err.message);
       spanishExplanation =
-        'Hola Bob. Hemos inspeccionado el lote y encontramos problemas serios de calidad. ' +
-        'El nivel de severidad es ALTO. Por favor rechace el envío y contacte a su supervisor.';
+        'Hola Bob. Hemos inspeccionado el lote número seis y encontramos problemas graves de calidad. ' +
+        'El nivel de severidad es ALTO. Hay deterioro severo, decoloración y signos de descomposición. ' +
+        'Por favor rechace el envío completo y contacte a su supervisor de inmediato.';
     }
 
-    return res.send(twilioService.buildSpanishTwiml(spanishExplanation));
-  } else {
-    // English or unclear – default to English quality report
-    console.log('[Call] Language detected: English (default)');
+    emitTranscript('AI', spanishExplanation, 'es', 'Hello Bob. We inspected Lot 6 and found serious quality issues. Severity is HIGH. Please reject the shipment and contact your supervisor immediately.');
 
-    if (io) {
-      io.emit('call:language', { language: 'en' });
-    }
-
-    const englishTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+    const fullSpanish = spanishExplanation + ' ¿Tiene alguna pregunta?';
+    const spanishAudio = await ttsToUrl(fullSpanish);
+    if (spanishAudio) {
+      return res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="en-US">
-    Thank you Bob. We have inspected Lot 6 and found serious quality issues.
-    The produce shows high severity defects including wilting, discoloration, and signs of spoilage.
-    Please reject the entire shipment and contact your supervisor immediately.
-    A rejection report will be generated automatically. Thank you and goodbye.
-  </Say>
-  <Hangup/>
-</Response>`;
-
-    return res.send(englishTwiml);
+  <Gather input="speech" action="/api/twiml/respond" method="POST" speechTimeout="8" language="es-MX">
+    <Play>${spanishAudio}</Play>
+  </Gather>
+  <Redirect>/api/twiml/respond</Redirect>
+</Response>`);
+    }
+    const safeMsg = fullSpanish.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/respond" method="POST" speechTimeout="8" language="es-MX">
+    <Say voice="Polly.Mia-Neural" language="es-MX">${safeMsg}</Say>
+  </Gather>
+  <Redirect>/api/twiml/respond</Redirect>
+</Response>`);
+  } else {
+    if (!global.callLanguage) global.callLanguage = {};
+    global.callLanguage[req.body.CallSid] = 'en';
+    if (io) io.emit('call:language', { language: 'en' });
+    const englishText = 'Thank you Bob. We inspected Lot 6 and found serious quality issues — high severity defects including wilting and discoloration. The shipment must be rejected. Do you have any questions?';
+    emitTranscript('AI', englishText, 'en', null);
+    const englishAudio = await ttsToUrl(englishText);
+    if (englishAudio) {
+      return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/respond" method="POST" speechTimeout="8" language="en-US">
+    <Play>${englishAudio}</Play>
+  </Gather>
+  <Redirect>/api/twiml/respond</Redirect>
+</Response>`);
+    }
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/respond" method="POST" speechTimeout="8" language="en-US">
+    <Say voice="Polly.Joanna-Neural">${englishText}</Say>
+  </Gather>
+  <Redirect>/api/twiml/respond</Redirect>
+</Response>`);
   }
 });
 
@@ -208,39 +270,62 @@ router.post('/twiml/respond', async (req, res) => {
   console.log('[Call] POST /api/twiml/respond');
 
   const speechResult = (req.body.SpeechResult || '').trim();
+  const callSid = req.body.CallSid || 'unknown';
+  const language = global.callLanguage?.[callSid] || 'es';
+  const voice = language === 'es' ? 'Polly.Mia-Neural' : 'Polly.Joanna-Neural';
+  const gatherLang = language === 'es' ? 'es-MX' : 'en-US';
+
   console.log('[Call] Bob said:', speechResult);
 
-  const io = req.app.get('io');
-
-  // Emit Bob's response as a transcript
-  if (io && speechResult) {
-    const { v4: uuidv4 } = require('uuid');
-    const transcript = {
-      id: uuidv4(),
-      speaker: 'Bob',
-      text: speechResult,
-      lang: 'es',
-      translation: null,
-      timestamp: Date.now(),
-    };
-    if (!global.transcripts) global.transcripts = [];
-    global.transcripts.push(transcript);
-    io.emit('transcript', transcript);
+  if (speechResult) {
+    emitTranscript('Bob', speechResult, language, null);
   }
+
+  // Detect if Bob is ending the call
+  const endPhrases = ['adiós', 'hasta luego', 'gracias', 'goodbye', 'bye', 'thank you', 'that\'s all'];
+  const isEnding = endPhrases.some(p => speechResult.toLowerCase().includes(p));
+
+  const aiReply = await groqService.getResponse(callSid, speechResult, language, global.currentProduceInfo);
+  emitTranscript('AI', aiReply, language, null);
+
+  const safeReply = aiReply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   res.set('Content-Type', 'text/xml');
 
-  // Generate a closing Spanish response
-  const closingTwiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice" language="es-MX">
-    Gracias por su confirmación, Bob. El informe de rechazo ha sido registrado.
-    Por favor contacte al proveedor para coordinar el reemplazo. Hasta luego.
-  </Say>
-  <Hangup/>
-</Response>`;
+  const replyAudio = await ttsToUrl(aiReply);
 
-  return res.send(closingTwiml);
+  if (isEnding) {
+    groqService.endConversation(callSid);
+    if (replyAudio) {
+      return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Play>${replyAudio}</Play>
+  <Hangup/>
+</Response>`);
+    }
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="${voice}" language="${gatherLang}">${safeReply}</Say>
+  <Hangup/>
+</Response>`);
+  }
+
+  if (replyAudio) {
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/respond" method="POST" speechTimeout="8" language="${gatherLang}">
+    <Play>${replyAudio}</Play>
+  </Gather>
+  <Redirect>/api/twiml/respond</Redirect>
+</Response>`);
+  }
+  return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="/api/twiml/respond" method="POST" speechTimeout="8" language="${gatherLang}">
+    <Say voice="${voice}" language="${gatherLang}">${safeReply}</Say>
+  </Gather>
+  <Redirect>/api/twiml/respond</Redirect>
+</Response>`);
 });
 
 // ---------------------------------------------------------------------------

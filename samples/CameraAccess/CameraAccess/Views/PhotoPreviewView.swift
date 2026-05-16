@@ -19,6 +19,7 @@ import SwiftUI
 struct PhotoPreviewView: View {
   let photo: UIImage
   let onDismiss: () -> Void
+  var onAnalyze: ((UIImage) -> Void)? = nil
 
   @State private var showShareSheet = false
   @State private var dragOffset = CGSize.zero
@@ -35,8 +36,29 @@ struct PhotoPreviewView: View {
       VStack(spacing: 20) {
         photoDisplayView
 
-        CircleButton(icon: "square.and.arrow.up", text: nil) {
-          showShareSheet = true
+        HStack(spacing: 16) {
+          CircleButton(icon: "square.and.arrow.up", text: nil) {
+            showShareSheet = true
+          }
+
+          if onAnalyze != nil {
+            Button {
+              onAnalyze?(photo)
+              dismissWithAnimation()
+            } label: {
+              HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                Text("Analyze Produce")
+                  .font(.system(size: 15, weight: .semibold))
+              }
+              .foregroundStyle(.black)
+              .padding(.horizontal, 20)
+              .padding(.vertical, 12)
+              .background(Color.green)
+              .clipShape(Capsule())
+              .shadow(color: .green.opacity(0.5), radius: 8)
+            }
+          }
         }
       }
       .padding()

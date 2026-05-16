@@ -37,6 +37,11 @@
 		E6DA451F2E79A63100E3F688 /* MockDeviceKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DA451A2E79A63100E3F688 /* MockDeviceKitView.swift */; };
 		E6FD3BCE2EB4D53A00E7FE5D /* NonStreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */; };
 		FEEE00012F95000100000001 /* DeviceSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEE00002F95000100000001 /* DeviceSessionManager.swift */; };
+		A9A10002000000000000AAA1 /* AgriLensService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA1 /* AgriLensService.swift */; };
+		A9A10002000000000000AAA2 /* AgriLensViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA2 /* AgriLensViewModel.swift */; };
+		A9A10002000000000000AAA3 /* DiagnosisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA3 /* DiagnosisView.swift */; };
+		A9A10002000000000000AAA4 /* CallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA4 /* CallView.swift */; };
+		A9A10002000000000000AAA5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA5 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +106,11 @@
 		E6DA451A2E79A63100E3F688 /* MockDeviceKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitView.swift; sourceTree = "<group>"; };
 		E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonStreamView.swift; sourceTree = "<group>"; };
 		FEEE00002F95000100000001 /* DeviceSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSessionManager.swift; sourceTree = "<group>"; };
+		A9A10001000000000000AAA1 /* AgriLensService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgriLensService.swift; sourceTree = "<group>"; };
+		A9A10001000000000000AAA2 /* AgriLensViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgriLensViewModel.swift; sourceTree = "<group>"; };
+		A9A10001000000000000AAA3 /* DiagnosisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosisView.swift; sourceTree = "<group>"; };
+		A9A10001000000000000AAA4 /* CallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallView.swift; sourceTree = "<group>"; };
+		A9A10001000000000000AAA5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -166,6 +176,7 @@
 				FEEE00002F95000100000001 /* DeviceSessionManager.swift */,
 				8FD96B6F2E6F0A9800F56AB1 /* StreamSessionViewModel.swift */,
 				8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */,
+				A9A10001000000000000AAA2 /* AgriLensViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -183,6 +194,9 @@
 				8FD96B752E6F0A9800F56AB1 /* StreamSessionView.swift */,
 				E6A188472EB918740097D0E1 /* StreamView.swift */,
 				E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */,
+				A9A10001000000000000AAA3 /* DiagnosisView.swift */,
+				A9A10001000000000000AAA4 /* CallView.swift */,
+				A9A10001000000000000AAA5 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -197,6 +211,7 @@
 				8FD96B782E6F0A9800F56AB1 /* CameraAccess.entitlements */,
 				8FD96B792E6F0A9800F56AB1 /* CameraAccessApp.swift */,
 				8FD96B7B2E6F0A9800F56AB1 /* Info.plist */,
+				A9A10001000000000000AAA1 /* AgriLensService.swift */,
 			);
 			path = CameraAccess;
 			sourceTree = "<group>";
@@ -408,6 +423,11 @@
 				8FFD5FF52E8422580035E446 /* CircleButton.swift in Sources */,
 				8FFD5FF62E8422580035E446 /* CustomButton.swift in Sources */,
 				E6FD3BCE2EB4D53A00E7FE5D /* NonStreamView.swift in Sources */,
+				A9A10002000000000000AAA1 /* AgriLensService.swift in Sources */,
+				A9A10002000000000000AAA2 /* AgriLensViewModel.swift in Sources */,
+				A9A10002000000000000AAA3 /* DiagnosisView.swift in Sources */,
+				A9A10002000000000000AAA4 /* CallView.swift in Sources */,
+				A9A10002000000000000AAA5 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

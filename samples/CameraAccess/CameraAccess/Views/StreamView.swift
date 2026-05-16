@@ -20,6 +20,7 @@ import SwiftUI
 struct StreamView: View {
   @Bindable var viewModel: StreamSessionViewModel
   var wearablesVM: WearablesViewModel
+  var agriVM: AgriLensViewModel
 
   var body: some View {
     ZStack {
@@ -44,12 +45,24 @@ struct StreamView: View {
       }
 
       // Bottom controls layer
-
       VStack {
         Spacer()
         ControlsView(viewModel: viewModel)
       }
       .padding(.all, 24)
+
+      // Analysis loading overlay
+      if agriVM.isAnalyzing {
+        ZStack {
+          Color.black.opacity(0.75).ignoresSafeArea()
+          VStack(spacing: 16) {
+            ProgressView().tint(.green).scaleEffect(1.4)
+            Text("Analyzing produce...")
+              .font(.system(size: 15, weight: .medium))
+              .foregroundStyle(.white)
+          }
+        }
+      }
     }
     .onDisappear {
       Task {
@@ -65,6 +78,10 @@ struct StreamView: View {
           photo: photo,
           onDismiss: {
             viewModel.dismissPhotoPreview()
+          },
+          onAnalyze: { image in
+            viewModel.dismissPhotoPreview()
+            Task { await agriVM.analyze(image: image) }
           }
         )
       }

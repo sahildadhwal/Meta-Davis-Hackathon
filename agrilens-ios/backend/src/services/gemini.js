@@ -71,7 +71,7 @@ async function analyzeProduceImage(imageBase64, mimeType) {
   }
 
   const model = client.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash',
     systemInstruction:
       'You are an agricultural produce quality inspection AI assistant. ' +
       'Analyze produce shipment images carefully. Determine visible defects, ' +
@@ -103,15 +103,14 @@ Rules:
 - workerScript should be conversational, as if speaking to a field worker named Bob`;
 
   try {
-    const result = await model.generateContent([
+    const geminiCall = model.generateContent([
       prompt,
-      {
-        inlineData: {
-          mimeType,
-          data: imageBase64,
-        },
-      },
+      { inlineData: { mimeType, data: imageBase64 } },
     ]);
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Gemini timeout')), 10000)
+    );
+    const result = await Promise.race([geminiCall, timeout]);
 
     const responseText = result.response.text();
     console.log('[Gemini] Raw response (first 300 chars):', responseText.substring(0, 300));

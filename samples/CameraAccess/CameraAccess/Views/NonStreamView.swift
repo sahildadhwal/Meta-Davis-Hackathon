@@ -24,8 +24,10 @@ private let waitingForActiveDeviceText = "Waiting for an active device"
 struct NonStreamView: View {
   var viewModel: StreamSessionViewModel
   @Bindable var wearablesVM: WearablesViewModel
+  var agriVM: AgriLensViewModel
   @State private var sheetHeight: CGFloat = 300
   @State private var showSettingsMenu: Bool = false
+  @State private var showImagePicker: Bool = false
 
   private var isUpdateRequired: Bool {
     wearablesVM.requiresFirmwareUpdate || viewModel.requiresDATAppUpdate
@@ -63,17 +65,30 @@ struct NonStreamView: View {
           }
           .overlay(alignment: .trailing) {
             if showSettingsMenu {
-              CustomButton(
-                title: "Disconnect",
-                style: .destructive,
-                isDisabled: wearablesVM.registrationState != .registered
-              ) {
-                wearablesVM.disconnectGlasses()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                  showSettingsMenu = false
+              VStack(spacing: 8) {
+                CustomButton(
+                  title: "AgriLens Settings",
+                  style: .primary,
+                  isDisabled: false
+                ) {
+                  agriVM.showSettings = true
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showSettingsMenu = false
+                  }
                 }
+                .frame(width: 160)
+                CustomButton(
+                  title: "Disconnect",
+                  style: .destructive,
+                  isDisabled: wearablesVM.registrationState != .registered
+                ) {
+                  wearablesVM.disconnectGlasses()
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showSettingsMenu = false
+                  }
+                }
+                .frame(width: 160)
               }
-              .frame(width: 120)
               .transition(.scale(scale: 0.01, anchor: .trailing).combined(with: .opacity))
             }
           }
@@ -156,9 +171,38 @@ struct NonStreamView: View {
               await viewModel.handleStartStreaming()
             }
           }
+
+          CustomButton(
+            title: agriVM.isAnalyzing ? "Analyzing..." : "Scan from Library",
+            style: .primary,
+            isDisabled: agriVM.isAnalyzing
+          ) {
+            showImagePicker = true
+          }
         }
       }
       .padding(.all, 24)
+
+      // Analyzing overlay
+      if agriVM.isAnalyzing {
+        Color.black.opacity(0.7).ignoresSafeArea()
+        VStack(spacing: 16) {
+          ProgressView().tint(.green).scaleEffect(1.4)
+          Text("Analyzing produce with Gemini AI...")
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+        }
+      }
+    }
+    .sheet(isPresented: $showImagePicker) {
+      MediaPickerView(mode: .image) { url, _ in
+        showImagePicker = false
+        if let data = try? Data(contentsOf: url),
+           let image = UIImage(data: data) {
+          Task { await agriVM.analyze(image: image) }
+        }
+      }
     }
     .sheet(isPresented: $wearablesVM.showGettingStartedSheet) {
       GettingStartedSheetView(height: $sheetHeight)
