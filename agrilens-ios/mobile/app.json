@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "AgriLens AI",
+    "slug": "agrilens-ai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "agrilens",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0a0a0f"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hackathon.agrilens",
+      "infoPlist": {
+        "NSCameraUsageDescription": "AgriLens uses your camera to capture produce images for AI quality analysis.",
+        "NSPhotoLibraryUsageDescription": "AgriLens accesses your photo library to select produce images for analysis."
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image-picker",
+      [
+        "expo-av",
+        { "microphonePermission": false }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
