@@ -21,8 +21,8 @@ final class DeviceSessionManager {
   private let wearables: WearablesInterface
   private let deviceSelector: AutoDeviceSelector
   private var deviceSession: DeviceSession?
-  @ObservationIgnored private var deviceMonitorTask: Task<Void, Never>?
-  @ObservationIgnored private var stateObserverTask: Task<Void, Never>?
+  @ObservationIgnored nonisolated(unsafe) private var deviceMonitorTask: Task<Void, Never>?
+  @ObservationIgnored nonisolated(unsafe) private var stateObserverTask: Task<Void, Never>?
 
   init(wearables: WearablesInterface) {
     self.wearables = wearables
@@ -30,10 +30,9 @@ final class DeviceSessionManager {
     startDeviceMonitoring()
   }
 
-  isolated deinit {
+  deinit {
     deviceMonitorTask?.cancel()
     stateObserverTask?.cancel()
-    deviceSession?.stop()
   }
 
   /// Stops the device session and cancels monitoring. Call before releasing.

@@ -28,9 +28,9 @@ class WearablesViewModel {
   var errorMessage: String = ""
   var requiresFirmwareUpdate: Bool = false
 
-  @ObservationIgnored private var registrationTask: Task<Void, Never>?
-  @ObservationIgnored private var deviceStreamTask: Task<Void, Never>?
-  @ObservationIgnored private var setupDeviceStreamTask: Task<Void, Never>?
+  @ObservationIgnored nonisolated(unsafe) private var registrationTask: Task<Void, Never>?
+  @ObservationIgnored nonisolated(unsafe) private var deviceStreamTask: Task<Void, Never>?
+  @ObservationIgnored nonisolated(unsafe) private var setupDeviceStreamTask: Task<Void, Never>?
   private let wearables: WearablesInterface
   private var deviceCompatibility: [DeviceIdentifier: Compatibility] = [:]
   private var compatibilityListenerTokens: [DeviceIdentifier: AnyListenerToken] = [:]
@@ -56,7 +56,7 @@ class WearablesViewModel {
     }
   }
 
-  isolated deinit {
+  deinit {
     registrationTask?.cancel()
     deviceStreamTask?.cancel()
     setupDeviceStreamTask?.cancel()
