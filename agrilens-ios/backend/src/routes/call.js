@@ -56,7 +56,7 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 
 /**
- * Initiate a call to Bob.
+ * Initiate a call to Lebron.
  *
  * Body:
  *   demoMode    {boolean}  - If true, run the simulated conversation
@@ -140,7 +140,7 @@ router.post('/call-bob', async (req, res) => {
 
 async function handleGreeting(req, res) {
   console.log('[Call] twiml/greeting');
-  const greetingText = 'Hello Bob. This is AgriLens AI. We have detected a possible pest incident in the produce section. What language do you prefer — English or Spanish?';
+  const greetingText = 'Hello Lebron. This is AgriLens AI. We have detected a possible pest incident in the produce section. What language do you prefer — English or Spanish?';
   emitTranscript('AI', greetingText, 'en', null);
   res.set('Content-Type', 'text/xml');
   const greetingAudio = await ttsToUrl(greetingText);
@@ -171,13 +171,13 @@ router.post('/twiml/greeting', handleGreeting);
 // ---------------------------------------------------------------------------
 
 /**
- * Handles Bob's language preference response.
+ * Handles Lebron's language preference response.
  * Twilio sends SpeechResult in the body.
  */
 router.post('/twiml/language', async (req, res) => {
   console.log('[Call] POST /api/twiml/language');
   const speechResult = (req.body.SpeechResult || '').toLowerCase().trim();
-  console.log('[Call] SpeechResult from Bob:', speechResult);
+  console.log('[Call] SpeechResult from Lebron:', speechResult);
   const io = req.app.get('io');
 
   const isSpanish =
@@ -186,9 +186,9 @@ router.post('/twiml/language', async (req, res) => {
     speechResult.includes('espanol') ||
     speechResult.includes('es');
 
-  // Store Bob's language choice as transcript
+  // Store Lebron's language choice as transcript
   if (speechResult) {
-    emitTranscript('Bob', speechResult, isSpanish ? 'es' : 'en', isSpanish ? 'Spanish, please.' : null);
+    emitTranscript('Lebron', speechResult, isSpanish ? 'es' : 'en', isSpanish ? 'Spanish, please.' : null);
   }
 
   res.set('Content-Type', 'text/xml');
@@ -201,12 +201,12 @@ router.post('/twiml/language', async (req, res) => {
     const produceInfo = global.currentProduceInfo;
     const spanishExplanation = await groqService.getResponse(
       req.body.CallSid + '-intro',
-      'Bob selected Spanish. Give a concise pest damage report for the produce incident.',
+      'Lebron selected Spanish. Give a concise pest damage report for the produce incident.',
       'es',
       produceInfo
     );
 
-    emitTranscript('AI', spanishExplanation, 'es', 'Hello Bob. We inspected Lot 6 and found serious quality issues. Severity is HIGH. Please reject the shipment and contact your supervisor immediately.');
+    emitTranscript('AI', spanishExplanation, 'es', 'Hello Lebron. We inspected Lot 6 and found serious quality issues. Severity is HIGH. Please reject the shipment and contact your supervisor immediately.');
 
     const fullSpanish = spanishExplanation + ' ¿Tiene alguna pregunta?';
     const spanishAudio = await ttsToUrl(fullSpanish);
@@ -231,7 +231,7 @@ router.post('/twiml/language', async (req, res) => {
     if (!global.callLanguage) global.callLanguage = {};
     global.callLanguage[req.body.CallSid] = 'en';
     if (io) io.emit('call:language', { language: 'en' });
-    const englishText = 'Thank you Bob. We detected animal damage on the banana display at Stall 4B. Bite marks are visible on multiple bananas and appear consistent with raccoon or rat activity. The damage is at ground level near the rear storage area. Do you have any questions or should I connect you with pest control?';
+    const englishText = 'Thank you Lebron. We detected animal damage on the banana display at Stall 4B. Bite marks are visible on multiple bananas and appear consistent with raccoon or rat activity. The damage is at ground level near the rear storage area. Do you have any questions or should I connect you with pest control?';
     emitTranscript('AI', englishText, 'en', null);
     const englishAudio = await ttsToUrl(englishText);
     if (englishAudio) {
@@ -258,7 +258,7 @@ router.post('/twiml/language', async (req, res) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Handles ongoing conversation responses from Bob after the quality report.
+ * Handles ongoing conversation responses from Lebron after the quality report.
  */
 router.post('/twiml/respond', async (req, res) => {
   console.log('[Call] POST /api/twiml/respond');
@@ -269,13 +269,13 @@ router.post('/twiml/respond', async (req, res) => {
   const voice = language === 'es' ? 'Polly.Mia-Neural' : 'Polly.Joanna-Neural';
   const gatherLang = language === 'es' ? 'es-MX' : 'en-US';
 
-  console.log('[Call] Bob said:', speechResult);
+  console.log('[Call] Lebron said:', speechResult);
 
   if (speechResult) {
-    emitTranscript('Bob', speechResult, language, null);
+    emitTranscript('Lebron', speechResult, language, null);
   }
 
-  // Detect if Bob is ending the call
+  // Detect if Lebron is ending the call
   const endPhrases = ['adiós', 'hasta luego', 'gracias', 'goodbye', 'bye', 'thank you', 'that\'s all'];
   const isEnding = endPhrases.some(p => speechResult.toLowerCase().includes(p));
 
@@ -344,7 +344,7 @@ router.post('/twiml/status', (req, res) => {
     ringing: { status: 'ringing', message: 'Ringing...' },
     'in-progress': { status: 'connected', message: 'Call in progress' },
     completed: { status: 'ended', message: 'Call completed successfully' },
-    busy: { status: 'failed', message: "Bob's line is busy" },
+    busy: { status: 'failed', message: "Lebron's line is busy" },
     'no-answer': { status: 'failed', message: 'No answer' },
     failed: { status: 'failed', message: 'Call failed' },
     canceled: { status: 'ended', message: 'Call was cancelled' },

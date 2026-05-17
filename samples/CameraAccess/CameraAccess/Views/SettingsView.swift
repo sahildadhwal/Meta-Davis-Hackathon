@@ -36,7 +36,7 @@ struct AgriLensSettingsView: View {
 
     private var header: some View {
         HStack {
-            Text("AgriLens Settings")
+            Text("FarmEye Settings")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundStyle(.white)
             Spacer()
@@ -126,7 +126,7 @@ struct AgriLensSettingsView: View {
             sectionLabel("About", icon: "info.circle.fill")
 
             VStack(spacing: 0) {
-                infoRow("App", "AgriLens AI")
+                infoRow("App", "FarmEye AI")
                 Divider().background(Color.white.opacity(0.06))
                 infoRow("AI Vision", "Gemini 1.5 Flash")
                 Divider().background(Color.white.opacity(0.06))

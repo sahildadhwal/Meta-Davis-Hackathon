@@ -1,7 +1,7 @@
 /**
- * AgriLens iOS - Backend Server
+ * FarmEye AI - Backend Server
  *
- * Express + Socket.io server powering the AgriLens iOS app.
+ * Express + Socket.io server powering the FarmEye AI app.
  *
  * Services:
  *   - Google Gemini (vision + text)
@@ -130,7 +130,7 @@ console.log('[Server] Serving uploads from:', uploadsPath);
 
 app.get('/', (req, res) => {
   res.json({
-    name: 'AgriLens iOS Backend',
+    name: 'FarmEye AI Backend',
     version: '0.1.0',
     status: 'running',
     timestamp: new Date().toISOString(),
@@ -225,7 +225,7 @@ const PORT = process.env.PORT || 3002;
 httpServer.listen(PORT, () => {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════╗');
-  console.log('║         AgriLens iOS — Backend Server                   ║');
+  console.log('║         FarmEye AI — Backend Server                   ║');
   console.log('╚══════════════════════════════════════════════════════════╝');
   console.log('');
   console.log(`  HTTP server  : http://localhost:${PORT}`);

@@ -1,7 +1,24 @@
 import SwiftUI
 
+private func emojiFor(_ produceType: String?) -> String {
+    switch produceType?.lowercased() {
+    case "banana", "bananas": return "🍌"
+    case "tomato", "tomatoes": return "🍅"
+    case "onion", "onions": return "🧅"
+    case "grape", "grapes": return "🍇"
+    case "orange", "oranges": return "🍊"
+    case "lettuce": return "🥬"
+    case "avocado", "avocados": return "🥑"
+    case "mandarin orange", "mandarin": return "🍊"
+    case "strawberry", "strawberries": return "🍓"
+    case "apple", "apples": return "🍎"
+    default: return "🌿"
+    }
+}
+
 private let pestContacts: [PestContact] = [
-    PestContact(name: "Bob", role: "Field Manager", phone: "+17078632820", isInternal: true, badge: "On-site"),
+    PestContact(name: "Lebron", role: "Field Manager", phone: "+17078632820",
+                isInternal: true, badge: "On-site"),
     PestContact(name: "Davis Pest Solutions", role: "Licensed Exterminator", phone: "(530) 759-4430", isInternal: false, badge: "4.8★ · 0.3 mi"),
     PestContact(name: "Capitol Wildlife Control", role: "Raccoon & Rodent Specialist", phone: "(916) 638-5771", isInternal: false, badge: "4.6★ · 1.2 mi"),
     PestContact(name: "BugBusters Emergency", role: "24/7 Pest Response", phone: "(916) 482-2057", isInternal: false, badge: "4.5★ · 2.1 mi"),
@@ -16,12 +33,14 @@ struct DiagnosisView: View {
             ScrollView {
                 VStack(spacing: 14) {
                     if let d = agriVM.diagnosis {
-                        incidentCard(d)
-                        analysisCard(d)
-                    }
-                    contactsCard
-                    if agriVM.showCall {
-                        liveCallCard
+                        if d.status == "PASS" {
+                            passCard(d)
+                        } else {
+                            incidentCard(d)
+                            analysisCard(d)
+                            contactsCard
+                            if agriVM.showCall { liveCallCard }
+                        }
                     }
                     Spacer(minLength: 32)
                 }
@@ -40,6 +59,57 @@ struct DiagnosisView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Pass Card
+
+    private func passCard(_ d: DiagnosisData) -> some View {
+        VStack(spacing: 24) {
+            VStack(spacing: 14) {
+                ZStack {
+                    Circle().fill(Color.green.opacity(0.12)).frame(width: 100, height: 100)
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.green)
+                }
+                Text("Passes Inspection")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(.primary)
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    Text(d.location ?? "Produce Section")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+                Text(d.summary ?? "No issues detected. This shipment meets all safety and quality standards.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.green.opacity(0.25), lineWidth: 1.5))
+
+            Button {
+                agriVM.dismissAll()
+                dismiss()
+            } label: {
+                Label("Scan Another", systemImage: "camera.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.blue)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .padding(.top, 20)
     }
 
     // MARK: - Incident Card
@@ -64,7 +134,7 @@ struct DiagnosisView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.orange.opacity(0.1))
                     .frame(width: 60, height: 60)
-                    .overlay(Text("🍌").font(.system(size: 30)))
+                    .overlay(Text(emojiFor(d.produceType)).font(.system(size: 30)))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(d.produceType ?? "Produce")
@@ -257,7 +327,7 @@ struct DiagnosisView: View {
                     Circle()
                         .fill(Color.green)
                         .frame(width: 8, height: 8)
-                    Text("LIVE CALL · BOB")
+                    Text("LIVE CALL · LEBRON")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(Color(red: 0.1, green: 0.55, blue: 0.1))
                 }
@@ -282,7 +352,7 @@ struct DiagnosisView: View {
             if agriVM.transcripts.isEmpty {
                 HStack(spacing: 8) {
                     ProgressView().scaleEffect(0.8)
-                    Text("Connecting to Bob...")
+                    Text("Connecting to Lebron...")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }

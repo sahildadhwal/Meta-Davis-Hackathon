@@ -8,7 +8,7 @@ function getClient() {
   return new Groq({ apiKey });
 }
 
-const SYSTEM_PROMPT = (produceInfo, language) => `You are AgriLens AI, an intelligent pest detection assistant on a phone call with Bob, a field manager at a produce market.
+const SYSTEM_PROMPT = (produceInfo, language) => `You are AgriLens AI, an intelligent pest detection assistant on a phone call with Lebron, a field manager at a produce market.
 
 Incident details:
 - Location: Produce Section, Stall 4B
@@ -26,8 +26,8 @@ Rules:
 - Respond ONLY in ${language === 'es' ? 'Spanish' : 'English'}
 - Keep responses SHORT — 2 to 3 sentences max. This is a phone call.
 - Be professional, direct, and helpful
-- If Bob asks if it could be a specific animal, give your assessment based on bite pattern evidence
-- If Bob says he will handle it, or says goodbye/thanks, wrap up warmly and say you will notify the supervisor and log the incident
+- If Lebron asks if it could be a specific animal, give your assessment based on bite pattern evidence
+- If Lebron says he will handle it, or says goodbye/thanks, wrap up warmly and say you will notify the supervisor and log the incident
 - Never break character`;
 
 async function getResponse(callSid, bobMessage, language, produceInfo) {
@@ -63,12 +63,48 @@ async function getResponse(callSid, bobMessage, language, produceInfo) {
 
 function getFallback(language) {
   return language === 'es'
-    ? 'Entendido Bob. Registraré esto y notificaré a su supervisor de inmediato.'
-    : 'Understood Bob. I will log this incident and notify your supervisor right away.';
+    ? 'Entendido Lebron. Registraré esto y notificaré a su supervisor de inmediato.'
+    : 'Understood Lebron. I will log this incident and notify your supervisor right away.';
 }
 
 function endConversation(callSid) {
   if (global.conversations) delete global.conversations[callSid];
 }
 
-module.exports = { getResponse, endConversation };
+async function analyzeProduceText() {
+  const client = getClient();
+  if (!client) return null;
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an agricultural pest damage detection AI. Return ONLY raw JSON with no markdown, no code fences, no extra text.',
+        },
+        {
+          role: 'user',
+          content: `Return ONLY this JSON with no changes to the field names or structure. Fill in realistic values for a banana pest damage incident:
+{"status":"PEST_DAMAGE","produceType":"Banana","pestType":"Raccoon / Rat (suspected)","location":"Produce Section — Stall 4B","issues":["issue 1","issue 2","issue 3","issue 4"],"severity":"HIGH","severityScore":8,"summary":"Two sentence summary of the banana damage.","recommendations":["action 1","action 2","action 3","action 4"],"workerScript":"Short verbal explanation for field worker about the banana damage."}`,
+        },
+      ],
+      max_tokens: 400,
+      temperature: 0.4,
+    });
+
+    const text = completion.choices[0]?.message?.content?.trim() || '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      const parsed = JSON.parse(match[0]);
+      console.log('[Groq] analyzeProduceText success – produceType:', parsed.produceType);
+      return parsed;
+    }
+    return null;
+  } catch (err) {
+    console.error('[Groq] analyzeProduceText error:', err.message);
+    return null;
+  }
+}
+
+module.exports = { getResponse, endConversation, analyzeProduceText };

@@ -1,5 +1,5 @@
 /**
- * AgriLens iOS - Demo Simulation
+ * FarmEye AI - Demo Simulation
  *
  * Simulates a full AI-to-field-worker phone call conversation using
  * pre-scripted dialogue with realistic timing delays. Emits Socket.io
@@ -94,7 +94,7 @@ function runDemoSimulation(io, produceInfo) {
     emitTranscript(io, {
       id: uuidv4(),
       speaker: 'AI',
-      text: 'Hello Bob. This is AgriLens AI. What is your preferred language?',
+      text: 'Hello Bob. This is FarmEye AI. What is your preferred language?',
       lang: 'en',
       translation: null,
       timestamp: Date.now(),

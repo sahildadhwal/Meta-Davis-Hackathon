@@ -1,7 +1,7 @@
 import SwiftUI
 
 private let allProduce: [(emoji: String, key: String)] = [
-    ("🍌", "banana"), ("🍅", "tomato"), ("🧅", "onion"), ("🍇", "grapes"), ("🍊", "orange")
+    ("🍌", "banana"), ("🍊", "orange"), ("🥑", "avocado"), ("🍇", "grapes"), ("🍅", "tomato")
 ]
 
 private let scattered: [(x: CGFloat, y: CGFloat, idx: Int)] = [
@@ -51,7 +51,7 @@ struct MockLoadingView: View {
                         Text("Analyzing produce\(String(repeating: ".", count: dotCount))")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundStyle(.primary)
-                        Text("AgriLens AI is scanning for pest activity")
+                        Text("FarmEye AI is scanning for pest activity")
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }

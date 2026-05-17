@@ -20,6 +20,7 @@ struct DiagnosisData: Codable {
     let recommendations: [String]
     let workerScript: String?
     let imageUrl: String?
+    let isFallback: Bool?
 }
 
 struct TranscriptsResponse: Codable {
@@ -51,16 +52,14 @@ final class AgriLensService {
     static let shared = AgriLensService()
     private init() {}
 
-    var backendURL: String {
-        get { UserDefaults.standard.string(forKey: "agrilens_backend_url") ?? "https://tiptop-sarcasm-humped.ngrok-free.dev" }
-        set { UserDefaults.standard.set(newValue, forKey: "agrilens_backend_url") }
-    }
+    var backendURL: String = "https://engineers-biographies-stopping-cottages.trycloudflare.com"
 
     func analyzeImage(_ image: UIImage) async throws -> DiagnosisData {
         guard let url = URL(string: "\(backendURL)/api/analyze-image") else { throw URLError(.badURL) }
         var request = URLRequest(url: url, timeoutInterval: 60)
         request.httpMethod = "POST"
         request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
+        request.setValue("true", forHTTPHeaderField: "bypass-tunnel-reminder")
         let boundary = "AgriLens-\(UUID().uuidString)"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { throw URLError(.cannotDecodeContentData) }
@@ -83,6 +82,7 @@ final class AgriLensService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
+        request.setValue("true", forHTTPHeaderField: "bypass-tunnel-reminder")
         var body: [String: Any] = ["demoMode": demoMode]
         if let info = produceInfo {
             body["produceInfo"] = [
@@ -100,6 +100,7 @@ final class AgriLensService {
         guard let url = URL(string: "\(backendURL)/api/transcripts") else { throw URLError(.badURL) }
         var request = URLRequest(url: url)
         request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
+        request.setValue("true", forHTTPHeaderField: "bypass-tunnel-reminder")
         let (data, _) = try await URLSession.shared.data(for: request)
         return (try JSONDecoder().decode(TranscriptsResponse.self, from: data)).data
     }

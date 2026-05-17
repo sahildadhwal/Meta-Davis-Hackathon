@@ -48,7 +48,7 @@ const FALLBACK_ANALYSIS = {
     'Photograph all damage for incident report',
     'Notify store manager and health inspector',
   ],
-  workerScript: 'Hello Bob. We detected animal damage on the banana display at Stall 4B. Bite marks suggest raccoon or rat activity. This needs immediate attention.',
+  workerScript: 'Hello Lebron. We detected animal damage on the banana display at Stall 4B. Bite marks suggest raccoon or rat activity. This needs immediate attention.',
 };
 
 // ---------------------------------------------------------------------------
@@ -75,12 +75,11 @@ async function analyzeProduceImage(imageBase64, mimeType) {
     model: 'gemini-2.0-flash-lite',
     systemInstruction:
       'You are an agricultural pest damage detection AI assistant. ' +
-      'Analyze produce images carefully for signs of animal or pest damage. ' +
-      'Look for bite marks, teeth impressions, claw marks, chewing damage, or other evidence of pest activity. ' +
-      'Identify the likely pest type based on the damage pattern. ' +
-      'Assign a severity level and recommend pest control actions. ' +
-      'Explain the issue in simple language suitable for field workers. ' +
-      'IMPORTANT: For this demo, always find significant pest damage on the produce.',
+      'Analyze produce images carefully and honestly. ' +
+      'If you see bite marks, teeth impressions, claw marks, holes, or chewing damage, identify the likely pest. ' +
+      'If the produce looks healthy and undamaged, say so — use status PASS. ' +
+      'Assign a severity level and recommend appropriate actions. ' +
+      'Explain findings in simple language suitable for field workers.',
   });
 
   const prompt = `Inspect this produce image for pest or animal damage and return a JSON object with EXACTLY this structure (no markdown, no extra text, raw JSON only):
@@ -99,13 +98,12 @@ async function analyzeProduceImage(imageBase64, mimeType) {
 }
 
 Rules:
-- status must be "PEST_DAMAGE" for this demo
-- pestType should identify the likely pest based on bite pattern evidence
-- severity must be "HIGH" or "CRITICAL"
-- severityScore must be between 7 and 10
-- issues array must contain at least 3 specific damage observations
-- recommendations array must contain 3-5 concrete pest control action steps
-- workerScript should be conversational, as if speaking to a field worker named Bob`;
+- If produce looks healthy: status = "PASS", severity = "NONE", severityScore = 0, issues = [], pestType = null
+- If damage is visible: status = "PEST_DAMAGE", severity = "HIGH" or "CRITICAL", severityScore 7-10
+- pestType should identify the likely pest based on visible evidence
+- issues array: at least 3 observations if damaged, empty if PASS
+- recommendations: appropriate actions for the situation
+- workerScript should be conversational, as if speaking to a field worker named Lebron`;
 
   try {
     const geminiCall = model.generateContent([
@@ -132,8 +130,19 @@ Rules:
     return parsed;
   } catch (err) {
     console.error('[Gemini] analyzeProduceImage error:', err.message);
-    console.warn('[Gemini] Returning fallback analysis for demo robustness');
-    return FALLBACK_ANALYSIS;
+    console.warn('[Gemini] Trying Groq as fallback for image analysis...');
+    try {
+      const { analyzeProduceText } = require('./groq');
+      const groqResult = await analyzeProduceText();
+      if (groqResult) {
+        console.log('[Gemini] Groq fallback succeeded');
+        return { ...groqResult, isFallback: true };
+      }
+    } catch (groqErr) {
+      console.error('[Gemini] Groq fallback failed:', groqErr.message);
+    }
+    console.warn('[Gemini] Returning hardcoded fallback analysis');
+    return { ...FALLBACK_ANALYSIS, isFallback: true };
   }
 }
 
@@ -177,9 +186,9 @@ async function translateText(text, targetLanguage) {
 // ---------------------------------------------------------------------------
 
 /**
- * Generate a contextual Spanish response for the field worker (Bob).
+ * Generate a contextual Spanish response for the field worker (Lebron).
  *
- * @param {string} context     - Conversational context / Bob's last message
+ * @param {string} context     - Conversational context / Lebron's last message
  * @param {object} produceInfo - Produce quality analysis result
  * @returns {Promise<string>}  - Spanish response text
  */
@@ -190,7 +199,7 @@ async function generateSpanishResponse(context, produceInfo) {
   if (!client) {
     // Hardcoded fallback Spanish response
     return (
-      'Hola Bob. Hemos inspeccionado el lote y encontramos problemas serios de calidad. ' +
+      'Hola Lebron. Hemos inspeccionado el lote y encontramos problemas serios de calidad. ' +
       'Por favor rechace el envío y contacte a su supervisor de inmediato.'
     );
   }
@@ -204,14 +213,14 @@ async function generateSpanishResponse(context, produceInfo) {
       `Recommendations: ${(produceInfo.recommendations || []).join('; ')}`
     : 'Produce quality issues detected – HIGH severity';
 
-  const prompt = `You are AgriLens AI, an agricultural quality inspection system, speaking in Spanish to a field worker named Bob.
+  const prompt = `You are AgriLens AI, an agricultural quality inspection system, speaking in Spanish to a field worker named Lebron.
 
 Produce inspection findings:
 ${produceContext}
 
 Conversation context: ${context || 'Initial contact'}
 
-Generate a clear, professional, and empathetic Spanish response to Bob explaining the quality issues and what actions he needs to take. Keep it concise (3-5 sentences). Return ONLY the Spanish text – no English, no labels, no quotes.`;
+Generate a clear, professional, and empathetic Spanish response to Lebron explaining the quality issues and what actions he needs to take. Keep it concise (3-5 sentences). Return ONLY the Spanish text – no English, no labels, no quotes.`;
 
   try {
     const result = await model.generateContent(prompt);
@@ -221,7 +230,7 @@ Generate a clear, professional, and empathetic Spanish response to Bob explainin
   } catch (err) {
     console.error('[Gemini] generateSpanishResponse error:', err.message);
     return (
-      'Hola Bob. Hemos detectado problemas de calidad de alta severidad en el lote. ' +
+      'Hola Lebron. Hemos detectado problemas de calidad de alta severidad en el lote. ' +
       'Por favor rechace el envío completo y notifique a su supervisor inmediatamente.'
     );
   }
