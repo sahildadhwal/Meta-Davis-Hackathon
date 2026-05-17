@@ -37,6 +37,9 @@ struct StreamSessionView: View {
     .onDisappear {
       viewModel.endSession()
     }
+    .fullScreenCover(isPresented: Bindable(agriVM).isMockLoading) {
+      MockLoadingView(agriVM: agriVM)
+    }
     .sheet(isPresented: Bindable(agriVM).showDiagnosis) {
       DiagnosisView(agriVM: agriVM)
     }

@@ -8,21 +8,26 @@ function getClient() {
   return new Groq({ apiKey });
 }
 
-const SYSTEM_PROMPT = (produceInfo, language) => `You are AgriLens AI, an agricultural quality inspection AI assistant on a phone call with a field worker named Bob.
+const SYSTEM_PROMPT = (produceInfo, language) => `You are AgriLens AI, an intelligent pest detection assistant on a phone call with Bob, a field manager at a produce market.
 
-Context:
-- You just inspected a produce shipment (Lot #6) and found SERIOUS quality issues
-- Produce type: ${produceInfo?.produceType || 'Lettuce'}
+Incident details:
+- Location: Produce Section, Stall 4B
+- Affected item: ${produceInfo?.produceType || 'Banana'}
+- Suspected pest: ${produceInfo?.pestType || 'Raccoon or Rat'}
 - Severity: ${produceInfo?.severity || 'HIGH'}
-- Issues: ${(produceInfo?.issues || ['Severe wilting', 'Dark discoloration', 'Signs of mold']).join(', ')}
-- The shipment must be rejected
+- Evidence: Bite marks on produce, ground-level damage pattern
+
+Your knowledge on pests:
+- Raccoon bites: large (2–3 cm), irregular, often show claw marks nearby, active at dusk/dawn
+- Rat bites: smaller (0.5–1 cm), more numerous, parallel tooth marks, usually overnight
+- Rabbit bites: clean 45-degree cuts, typically on lower items, active early morning
 
 Rules:
 - Respond ONLY in ${language === 'es' ? 'Spanish' : 'English'}
-- Keep responses SHORT (2-3 sentences max) — this is a phone call
-- Be professional but direct
-- Guide Bob to reject the shipment and document the issue
-- If Bob says goodbye or confirms action, wrap up the call warmly
+- Keep responses SHORT — 2 to 3 sentences max. This is a phone call.
+- Be professional, direct, and helpful
+- If Bob asks if it could be a specific animal, give your assessment based on bite pattern evidence
+- If Bob says he will handle it, or says goodbye/thanks, wrap up warmly and say you will notify the supervisor and log the incident
 - Never break character`;
 
 async function getResponse(callSid, bobMessage, language, produceInfo) {
@@ -32,7 +37,7 @@ async function getResponse(callSid, bobMessage, language, produceInfo) {
   if (!global.conversations) global.conversations = {};
   if (!global.conversations[callSid]) {
     global.conversations[callSid] = [
-      { role: 'system', content: SYSTEM_PROMPT(produceInfo, language) }
+      { role: 'system', content: SYSTEM_PROMPT(produceInfo, language) },
     ];
   }
 
@@ -42,8 +47,8 @@ async function getResponse(callSid, bobMessage, language, produceInfo) {
     const completion = await client.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: global.conversations[callSid],
-      max_tokens: 150,
-      temperature: 0.7,
+      max_tokens: 120,
+      temperature: 0.6,
     });
 
     const reply = completion.choices[0]?.message?.content?.trim() || getFallback(language);
@@ -58,8 +63,8 @@ async function getResponse(callSid, bobMessage, language, produceInfo) {
 
 function getFallback(language) {
   return language === 'es'
-    ? 'Entendido Bob. Por favor rechace el lote completo y contacte a su supervisor. ¿Necesita algo más?'
-    : 'Understood Bob. Please reject the entire lot and contact your supervisor. Is there anything else?';
+    ? 'Entendido Bob. Registraré esto y notificaré a su supervisor de inmediato.'
+    : 'Understood Bob. I will log this incident and notify your supervisor right away.';
 }
 
 function endConversation(callSid) {

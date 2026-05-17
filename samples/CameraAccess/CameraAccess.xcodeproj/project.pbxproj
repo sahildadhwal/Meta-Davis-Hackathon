@@ -42,6 +42,7 @@
 		A9A10002000000000000AAA3 /* DiagnosisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA3 /* DiagnosisView.swift */; };
 		A9A10002000000000000AAA4 /* CallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA4 /* CallView.swift */; };
 		A9A10002000000000000AAA5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA5 /* SettingsView.swift */; };
+		A9A10002000000000000AAA6 /* MockLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A10001000000000000AAA6 /* MockLoadingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +112,7 @@
 		A9A10001000000000000AAA3 /* DiagnosisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosisView.swift; sourceTree = "<group>"; };
 		A9A10001000000000000AAA4 /* CallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallView.swift; sourceTree = "<group>"; };
 		A9A10001000000000000AAA5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A9A10001000000000000AAA6 /* MockLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLoadingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -197,6 +199,7 @@
 				A9A10001000000000000AAA3 /* DiagnosisView.swift */,
 				A9A10001000000000000AAA4 /* CallView.swift */,
 				A9A10001000000000000AAA5 /* SettingsView.swift */,
+				A9A10001000000000000AAA6 /* MockLoadingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -428,6 +431,7 @@
 				A9A10002000000000000AAA3 /* DiagnosisView.swift in Sources */,
 				A9A10002000000000000AAA4 /* CallView.swift in Sources */,
 				A9A10002000000000000AAA5 /* SettingsView.swift in Sources */,
+				A9A10002000000000000AAA6 /* MockLoadingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

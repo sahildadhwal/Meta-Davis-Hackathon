@@ -81,7 +81,7 @@ struct StreamView: View {
           },
           onAnalyze: { image in
             viewModel.dismissPhotoPreview()
-            Task { await agriVM.analyze(image: image) }
+            agriVM.startLoadingAndAnalyze(image: image)
           }
         )
       }

@@ -140,7 +140,7 @@ router.post('/call-bob', async (req, res) => {
 
 async function handleGreeting(req, res) {
   console.log('[Call] twiml/greeting');
-  const greetingText = 'Hello Bob. This is AgriLens AI calling about your produce shipment. What is your preferred language? Please say English or Spanish.';
+  const greetingText = 'Hello Bob. This is AgriLens AI. We have detected a possible pest incident in the produce section. What language do you prefer — English or Spanish?';
   emitTranscript('AI', greetingText, 'en', null);
   res.set('Content-Type', 'text/xml');
   const greetingAudio = await ttsToUrl(greetingText);
@@ -207,9 +207,7 @@ router.post('/twiml/language', async (req, res) => {
       );
     } catch (err) {
       spanishExplanation =
-        'Hola Bob. Hemos inspeccionado el lote número seis y encontramos problemas graves de calidad. ' +
-        'El nivel de severidad es ALTO. Hay deterioro severo, decoloración y signos de descomposición. ' +
-        'Por favor rechace el envío completo y contacte a su supervisor de inmediato.';
+        'Hola Bob. Hemos detectado daño por animales en los plátanos del Puesto 4B. Las marcas de mordida son consistentes con actividad de mapache o rata. El daño está a nivel del suelo cerca de la puerta de almacenamiento trasera. ¿Tiene alguna pregunta?';
     }
 
     emitTranscript('AI', spanishExplanation, 'es', 'Hello Bob. We inspected Lot 6 and found serious quality issues. Severity is HIGH. Please reject the shipment and contact your supervisor immediately.');
@@ -237,7 +235,7 @@ router.post('/twiml/language', async (req, res) => {
     if (!global.callLanguage) global.callLanguage = {};
     global.callLanguage[req.body.CallSid] = 'en';
     if (io) io.emit('call:language', { language: 'en' });
-    const englishText = 'Thank you Bob. We inspected Lot 6 and found serious quality issues — high severity defects including wilting and discoloration. The shipment must be rejected. Do you have any questions?';
+    const englishText = 'Thank you Bob. We detected animal damage on the banana display at Stall 4B. Bite marks are visible on multiple bananas and appear consistent with raccoon or rat activity. The damage is at ground level near the rear storage area. Do you have any questions or should I connect you with pest control?';
     emitTranscript('AI', englishText, 'en', null);
     const englishAudio = await ttsToUrl(englishText);
     if (englishAudio) {

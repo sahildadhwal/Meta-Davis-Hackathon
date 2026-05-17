@@ -11,6 +11,8 @@ struct AnalyzeImageResponse: Codable {
 struct DiagnosisData: Codable {
     let status: String
     let produceType: String?
+    let pestType: String?
+    let location: String?
     let issues: [String]
     let severity: String
     let severityScore: Int?
@@ -32,6 +34,15 @@ struct TranscriptEntry: Codable, Identifiable {
     let lang: String?
     let translation: String?
     let timestamp: Double?
+}
+
+struct PestContact: Identifiable {
+    let id = UUID()
+    let name: String
+    let role: String
+    let phone: String
+    let isInternal: Bool
+    let badge: String?
 }
 
 // MARK: - Service

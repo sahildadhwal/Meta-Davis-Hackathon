@@ -183,6 +183,22 @@ struct NonStreamView: View {
       }
       .padding(.all, 24)
 
+      // Hidden demo trigger — bottom-left corner, presenter use only
+      VStack {
+        Spacer()
+        HStack {
+          Button { agriVM.startMockLoading() } label: {
+            Circle()
+              .fill(Color.gray)
+              .frame(width: 18, height: 18)
+              .opacity(0.22)
+          }
+          .padding(.leading, 20)
+          .padding(.bottom, 20)
+          Spacer()
+        }
+      }
+
       // Analyzing overlay
       if agriVM.isAnalyzing {
         Color.black.opacity(0.7).ignoresSafeArea()
@@ -198,9 +214,10 @@ struct NonStreamView: View {
     .sheet(isPresented: $showImagePicker) {
       MediaPickerView(mode: .image) { url, _ in
         showImagePicker = false
-        if let data = try? Data(contentsOf: url),
-           let image = UIImage(data: data) {
-          Task { await agriVM.analyze(image: image) }
+        if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+          agriVM.startLoadingAndAnalyze(image: image)
+        } else {
+          agriVM.startMockLoading()
         }
       }
     }

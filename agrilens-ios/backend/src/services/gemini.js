@@ -27,27 +27,28 @@ const getClient = () => {
 // ---------------------------------------------------------------------------
 
 const FALLBACK_ANALYSIS = {
-  status: 'BAD_QUALITY',
-  produceType: 'Lettuce',
+  status: 'PEST_DAMAGE',
+  produceType: 'Banana',
+  pestType: 'Raccoon / Rat (suspected)',
+  location: 'Produce Section — Stall 4B',
   issues: [
-    'Severe wilting and loss of turgor across all visible heads',
-    'Dark brown discoloration and necrotic spots on outer leaves',
-    'Visible mold growth in several crevices',
-    'Strong odour indicating bacterial decomposition',
-    'Packaging integrity compromised – moisture inside bag',
+    'Visible bite marks consistent with medium-sized mammal activity',
+    'Teeth impression pattern suggests raccoon or large rat',
+    'Multiple bananas affected across lower shelf level',
+    'Damage concentrated at ground level — indicates rodent or raccoon entry',
+    'Possible pest entry point near rear storage door',
   ],
   severity: 'HIGH',
-  severityScore: 9,
-  summary:
-    'This lettuce shipment shows advanced spoilage due to a cold-chain failure. The entire lot is unfit for distribution and must be rejected immediately.',
+  severityScore: 8,
+  summary: 'Banana display at Stall 4B shows clear signs of animal damage. Bite patterns are consistent with raccoon or rat activity. Immediate pest control intervention required.',
   recommendations: [
-    'Reject and quarantine the full lot – do not allow it to enter distribution',
-    'Document the refrigerator failure logs and photograph the unit immediately',
-    'Notify the quality supervisor and file an incident report within the hour',
-    'Contact the supplier to arrange an emergency replacement shipment',
+    'Quarantine all affected produce immediately',
+    'Inspect storage area for pest entry points',
+    'Contact pest control for on-site assessment',
+    'Photograph all damage for incident report',
+    'Notify store manager and health inspector',
   ],
-  workerScript:
-    'Hi Bob, this is AgriLens AI. We have completed the inspection of Lot 6. Unfortunately the lettuce shows severe quality issues – heavy wilting, dark spots, mould, and signs of decomposition. The severity is HIGH. Please reject this entire shipment right away, photograph the refrigeration unit, and contact your supervisor. Do not distribute this lot.',
+  workerScript: 'Hello Bob. We detected animal damage on the banana display at Stall 4B. Bite marks suggest raccoon or rat activity. This needs immediate attention.',
 };
 
 // ---------------------------------------------------------------------------
@@ -71,35 +72,39 @@ async function analyzeProduceImage(imageBase64, mimeType) {
   }
 
   const model = client.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-flash',
     systemInstruction:
-      'You are an agricultural produce quality inspection AI assistant. ' +
-      'Analyze produce shipment images carefully. Determine visible defects, ' +
-      'spoilage, bruising, mold, discoloration, contamination, or packaging problems. ' +
-      'Assign a severity level and recommend corrective actions. ' +
+      'You are an agricultural pest damage detection AI assistant. ' +
+      'Analyze produce images carefully for signs of animal or pest damage. ' +
+      'Look for bite marks, teeth impressions, claw marks, chewing damage, or other evidence of pest activity. ' +
+      'Identify the likely pest type based on the damage pattern. ' +
+      'Assign a severity level and recommend pest control actions. ' +
       'Explain the issue in simple language suitable for field workers. ' +
-      'IMPORTANT: For this demo, always find significant quality issues with the produce.',
+      'IMPORTANT: For this demo, always find significant pest damage on the produce.',
   });
 
-  const prompt = `Inspect this produce shipment image and return a JSON object with EXACTLY this structure (no markdown, no extra text, raw JSON only):
+  const prompt = `Inspect this produce image for pest or animal damage and return a JSON object with EXACTLY this structure (no markdown, no extra text, raw JSON only):
 
 {
-  "status": "BAD_QUALITY",
-  "produceType": "string (e.g. Lettuce, Tomatoes)",
-  "issues": ["array of specific issues found"],
+  "status": "PEST_DAMAGE",
+  "produceType": "string (e.g. Banana, Apple)",
+  "pestType": "string (e.g. Raccoon / Rat (suspected))",
+  "location": "string (e.g. Produce Section — Stall 4B)",
+  "issues": ["array of specific damage observations found"],
   "severity": "HIGH",
   "severityScore": 8,
   "summary": "Short worker-friendly summary in 1-2 sentences",
-  "recommendations": ["array of 3-4 specific action items"],
-  "workerScript": "What the AI will say verbally to explain the issue"
+  "recommendations": ["array of 3-5 specific pest control action items"],
+  "workerScript": "What the AI will say verbally to explain the pest incident to a field worker"
 }
 
 Rules:
-- status must be "BAD_QUALITY" for this demo
+- status must be "PEST_DAMAGE" for this demo
+- pestType should identify the likely pest based on bite pattern evidence
 - severity must be "HIGH" or "CRITICAL"
 - severityScore must be between 7 and 10
-- issues array must contain at least 3 specific problems
-- recommendations array must contain 3-4 concrete action steps
+- issues array must contain at least 3 specific damage observations
+- recommendations array must contain 3-5 concrete pest control action steps
 - workerScript should be conversational, as if speaking to a field worker named Bob`;
 
   try {
