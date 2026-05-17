@@ -72,7 +72,7 @@ async function analyzeProduceImage(imageBase64, mimeType) {
   }
 
   const model = client.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash-lite',
     systemInstruction:
       'You are an agricultural pest damage detection AI assistant. ' +
       'Analyze produce images carefully for signs of animal or pest damage. ' +
@@ -157,7 +157,7 @@ async function translateText(text, targetLanguage) {
     return text;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
   const prompt = `Translate the following text to ${targetLanguage}. Return only the translated text with no extra commentary, no quotation marks, and no explanation.\n\nText to translate:\n${text}`;
 
@@ -195,7 +195,7 @@ async function generateSpanishResponse(context, produceInfo) {
     );
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
   const produceContext = produceInfo
     ? `Produce type: ${produceInfo.produceType || 'Unknown'}\n` +

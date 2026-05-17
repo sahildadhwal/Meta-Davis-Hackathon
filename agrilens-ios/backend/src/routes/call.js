@@ -199,16 +199,12 @@ router.post('/twiml/language', async (req, res) => {
     if (io) io.emit('call:language', { language: 'es' });
 
     const produceInfo = global.currentProduceInfo;
-    let spanishExplanation;
-    try {
-      spanishExplanation = await geminiService.generateSpanishResponse(
-        'Bob selected Spanish. Deliver the produce quality inspection report.',
-        produceInfo
-      );
-    } catch (err) {
-      spanishExplanation =
-        'Hola Bob. Hemos detectado daño por animales en los plátanos del Puesto 4B. Las marcas de mordida son consistentes con actividad de mapache o rata. El daño está a nivel del suelo cerca de la puerta de almacenamiento trasera. ¿Tiene alguna pregunta?';
-    }
+    const spanishExplanation = await groqService.getResponse(
+      req.body.CallSid + '-intro',
+      'Bob selected Spanish. Give a concise pest damage report for the produce incident.',
+      'es',
+      produceInfo
+    );
 
     emitTranscript('AI', spanishExplanation, 'es', 'Hello Bob. We inspected Lot 6 and found serious quality issues. Severity is HIGH. Please reject the shipment and contact your supervisor immediately.');
 
