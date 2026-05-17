@@ -140,7 +140,7 @@ router.post('/call-bob', async (req, res) => {
 
 async function handleGreeting(req, res) {
   console.log('[Call] twiml/greeting');
-  const greetingText = 'Hello Lebron. This is AgriLens AI. We have detected a possible pest incident in the produce section. What language do you prefer — English or Spanish?';
+  const greetingText = 'Hello, this is FarmEye AI calling about a pest incident at your facility. What language would you prefer for this call?';
   emitTranscript('AI', greetingText, 'en', null);
   res.set('Content-Type', 'text/xml');
   const greetingAudio = await ttsToUrl(greetingText);
@@ -265,7 +265,23 @@ router.post('/twiml/respond', async (req, res) => {
 
   const speechResult = (req.body.SpeechResult || '').trim();
   const callSid = req.body.CallSid || 'unknown';
-  const language = global.callLanguage?.[callSid] || 'es';
+
+  // Detect mid-call language switch to Spanish
+  const wantsSpanish =
+    speechResult.toLowerCase().includes('spanish') ||
+    speechResult.toLowerCase().includes('español') ||
+    speechResult.toLowerCase().includes('only speaks spanish') ||
+    speechResult.toLowerCase().includes('speaks spanish') ||
+    speechResult.toLowerCase().includes('habla español') ||
+    speechResult.toLowerCase().includes('inform him') ||
+    speechResult.toLowerCase().includes('tell him');
+  if (wantsSpanish) {
+    if (!global.callLanguage) global.callLanguage = {};
+    global.callLanguage[callSid] = 'es';
+    console.log('[Call] Mid-call switch → Spanish');
+  }
+
+  const language = global.callLanguage?.[callSid] || 'en';
   const voice = language === 'es' ? 'Polly.Mia-Neural' : 'Polly.Joanna-Neural';
   const gatherLang = language === 'es' ? 'es-MX' : 'en-US';
 
@@ -276,10 +292,15 @@ router.post('/twiml/respond', async (req, res) => {
   }
 
   // Detect if Lebron is ending the call
-  const endPhrases = ['adiós', 'hasta luego', 'gracias', 'goodbye', 'bye', 'thank you', 'that\'s all'];
+  const endPhrases = ['adiós', 'hasta luego', 'goodbye', 'bye', 'thank you', 'that\'s all', 'take care of it', "i'll handle"];
   const isEnding = endPhrases.some(p => speechResult.toLowerCase().includes(p));
 
-  const aiReply = await groqService.getResponse(callSid, speechResult, language, global.currentProduceInfo);
+  // If switching to Spanish, instruct Groq to respond in Spanish
+  const groqMessage = wantsSpanish
+    ? speechResult + ' [IMPORTANT: Switch to Spanish now and address the pest control worker directly in Spanish]'
+    : speechResult;
+
+  const aiReply = await groqService.getResponse(callSid, groqMessage, language, global.currentProduceInfo);
   emitTranscript('AI', aiReply, language, null);
 
   const safeReply = aiReply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
