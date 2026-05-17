@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Smart Produce Inspection",
+    "slug": "meta-agi-phone",
+    "version": "1.0.0",
+    "scheme": "meta-agi-phone",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.metaagi.phone"
+    },
+    "android": {
+      "package": "com.metaagi.phone"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "This app uses the camera to capture produce photos for quality inspection."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
