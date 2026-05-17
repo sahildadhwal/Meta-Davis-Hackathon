@@ -52,7 +52,7 @@ final class AgriLensService {
     static let shared = AgriLensService()
     private init() {}
 
-    var backendURL: String = "https://engineers-biographies-stopping-cottages.trycloudflare.com"
+    var backendURL: String = "https://d02846e92c2ce0.lhr.life"
 
     func analyzeImage(_ image: UIImage) async throws -> DiagnosisData {
         guard let url = URL(string: "\(backendURL)/api/analyze-image") else { throw URLError(.badURL) }
